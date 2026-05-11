@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  subscription-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: subscription_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+
+  subscription-service:
+    build: ../greenbite-subscription-service-main/greenbite-subscription-service-main
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://subscription-db:5432/subscription_db
+    depends_on:
+      - subscription-db
+
+  user-service:
+    build: ../greenbite-user-service-main/greenbite-user-service-main
+    ports:
+      - "8082:8080"
+
+  bff-service:
+    build: ../greenbite-bff-main/greenbite-bff-main
+    ports:
+      - "8080:8080"
+    environment:
+      SUBSCRIPTION_SERVICE_URL: http://subscription-service:8080
+      USER_SERVICE_URL: http://user-service:8080
+
+  frontend:
+    build: ../greenbite-frontend-main/greenbite-frontend-main
+    ports:
+      - "3000:80"
+    depends_on:
+      - bff-service
